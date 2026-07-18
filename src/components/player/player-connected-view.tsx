@@ -162,8 +162,6 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
 
   const positions = ['bottom', 'bottom-left', 'left', 'top-left', 'top', 'top-right', 'right', 'bottom-right']
 
-  const oppPlayers = gameState.players.filter(p => p.id !== gameState.yourId)
-
   return (
     <div className="flex-1 flex flex-col px-2 pb-2"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
@@ -222,8 +220,9 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
           <div className="text-[8px] text-white/40 uppercase tracking-widest">Pot</div>
         </div>
 
-        {/* Player seats - opponents only */}
-        {oppPlayers.map((p, idx) => {
+        {/* Player seats - use original player index for correct positions */}
+        {gameState.players.map((p, idx) => {
+          if (p.id === gameState.yourId) return null
           const isCurrentTurn = gameState.currentTurnPlayerId === p.id
           const playerFolded = gameState.playerFolded.includes(p.id)
           const playerAllIn = gameState.playerAllIn.includes(p.id)
@@ -262,9 +261,10 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
           )
         })}
 
-        {/* Bet chips on table surface */}
-        {gameState.players.filter(p => (gameState.playerBets[p.id] || 0) > 0).map((p, idx) => {
+        {/* Bet chips - use original player index for correct positions */}
+        {gameState.players.map((p, idx) => {
           const bet = gameState.playerBets[p.id] || 0
+          if (bet <= 0) return null
           const pos = positions[idx] || 'bottom'
           const chipPos: Record<string, string> = {
             bottom: 'bottom-[20%] left-1/2 -translate-x-1/2',
