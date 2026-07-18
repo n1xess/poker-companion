@@ -160,107 +160,102 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
     )
   }
 
-  // Player's position index for highlighting
-  const myIndex = gameState.players.findIndex(p => p.id === gameState.yourId)
   const positions = ['bottom', 'bottom-left', 'left', 'top-left', 'top', 'top-right', 'right', 'bottom-right']
 
   return (
-    <div className="flex-1 flex flex-col px-2 pt-2 pb-4"
+    <div className="flex-1 flex flex-col min-h-0"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       {/* Winner banner */}
       {gameState.phase === 'showdown' && gameState.winnerId && (
-        <div className="glass rounded-2xl p-3 mx-2 mb-2 text-center border border-yellow-400/30">
-          <div className="chip-gold w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-black mx-auto mb-1">♠</div>
-          <div className="text-base font-bold">
+        <div className="glass rounded-2xl p-2 mx-2 mb-1 text-center border border-yellow-400/30 z-30">
+          <div className="chip-gold w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-black mx-auto mb-0.5">♠</div>
+          <div className="text-sm font-bold">
             🏆 {gameState.players.find(p => p.id === gameState.winnerId)?.name || 'Unknown'} wins!
           </div>
-          <div className="text-xl font-bold text-yellow-400 tabular-nums">
+          <div className="text-lg font-bold text-yellow-400 tabular-nums">
             ${formatChips(gameState.winnerAmount || 0)}
           </div>
         </div>
       )}
 
       {/* Poker Table */}
-      <div className="relative w-full aspect-[4/3] max-w-lg mx-auto">
-        <div className="absolute inset-0 rounded-[60px] poker-table-felt overflow-hidden">
-          <div className="absolute inset-[10px] rounded-[50px] border border-white/5" />
+      <div className="relative w-full flex-1 min-h-0 max-w-lg mx-auto px-2 pt-1">
+        <div className="relative w-full h-full rounded-[40px] poker-table-felt overflow-hidden">
+          <div className="absolute inset-[8px] rounded-[32px] border border-white/5" />
         </div>
-        <div className="absolute -inset-[3px] rounded-[63px] poker-table-rail pointer-events-none z-0" />
+        <div className="absolute -inset-[2px] rounded-[42px] poker-table-rail pointer-events-none z-0" />
 
         {/* Center - community cards + pot */}
-        <div className="absolute inset-[20%] flex flex-col items-center justify-center gap-2 z-10">
+        <div className="absolute inset-[18%] flex flex-col items-center justify-center gap-1 z-10 pointer-events-none">
           {gameState.phase !== 'preflop' && gameState.communityCards > 0 && (
-            <div className="flex gap-1.5">
+            <div className="flex gap-1">
               {(gameState.communityCardsStr || []).length >= gameState.communityCards
                 ? (gameState.communityCardsStr || []).slice(0, gameState.communityCards).map((card, i) => {
                     const isRed = card[1] === 'h' || card[1] === 'd'
                     return (
-                      <div key={i} className={`w-7 h-10 rounded-lg flex flex-col items-center justify-center font-bold shadow-sm text-[10px] ${
+                      <div key={i} className={`w-6 h-9 rounded-lg flex flex-col items-center justify-center font-bold shadow-sm text-[9px] ${
                         isRed ? 'bg-white text-red-500' : 'bg-white text-black'
                       }`}>
                         <span className="leading-none">{card[0]}</span>
-                        <span className={`leading-none text-[10px] ${isRed ? 'text-red-500' : 'text-black'}`}>
+                        <span className={`leading-none text-[9px] ${isRed ? 'text-red-500' : 'text-black'}`}>
                           {['♠', '♥', '♦', '♣'][['s', 'h', 'd', 'c'].indexOf(card[1])]}
                         </span>
                       </div>
                     )
                   })
                 : Array.from({ length: gameState.communityCards }).map((_, i) => (
-                    <div key={i} className="w-7 h-10 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
-                      <span className="text-white/20 text-[9px]">♠</span>
+                    <div key={i} className="w-6 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
+                      <span className="text-white/20 text-[8px]">♠</span>
                     </div>
                   ))
               }
             </div>
           )}
           <div className="flex items-center gap-1">
-            <span className="chip-red w-2.5 h-2.5 rounded-full inline-block" />
-            <span className="chip-blue w-2.5 h-2.5 rounded-full inline-block" />
+            <span className="chip-red w-2 h-2 rounded-full inline-block" />
+            <span className="chip-blue w-2 h-2 rounded-full inline-block" />
           </div>
-          <div className="text-lg font-bold tabular-nums">${formatChips(gameState.pot)}</div>
-          <div className="text-[9px] text-white/40 uppercase tracking-widest">Pot</div>
+          <div className="text-base font-bold tabular-nums">${formatChips(gameState.pot)}</div>
+          <div className="text-[8px] text-white/40 uppercase tracking-widest">Pot</div>
         </div>
 
-        {/* Player seats */}
+        {/* Player seats - opponents only */}
         {gameState.players.map((p, idx) => {
+          if (p.id === gameState.yourId) return null
           const isCurrentTurn = gameState.currentTurnPlayerId === p.id
           const playerFolded = gameState.playerFolded.includes(p.id)
           const playerAllIn = gameState.playerAllIn.includes(p.id)
-          const playerBet = gameState.playerBets[p.id] || 0
-          const isMe = p.id === gameState.yourId
 
           const pos = positions[idx] || 'bottom'
           const posClass = pos === 'bottom' ? 'absolute bottom-2 left-1/2 -translate-x-1/2' :
             pos === 'left' ? 'absolute left-1 top-1/2 -translate-y-1/2' :
             pos === 'right' ? 'absolute right-1 top-1/2 -translate-y-1/2' :
-            pos === 'bottom-left' ? 'absolute bottom-16 left-2' :
-            pos === 'bottom-right' ? 'absolute bottom-16 right-2' :
-            pos === 'top' ? 'absolute top-2 left-1/2 -translate-x-1/2' :
-            pos === 'top-left' ? 'absolute top-2 left-2' :
-            pos === 'top-right' ? 'absolute top-2 right-2' :
+            pos === 'bottom-left' ? 'absolute bottom-12 left-1' :
+            pos === 'bottom-right' ? 'absolute bottom-12 right-1' :
+            pos === 'top' ? 'absolute top-1 left-1/2 -translate-x-1/2' :
+            pos === 'top-left' ? 'absolute top-1 left-1' :
+            pos === 'top-right' ? 'absolute top-1 right-1' :
             'absolute bottom-2 left-1/2 -translate-x-1/2'
 
           return (
             <div
               key={p.id}
-              className={`${posClass} flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl min-w-[75px] z-20 transition-all duration-300 ${
+              className={`${posClass} flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-2xl min-w-[65px] z-20 transition-all duration-300 ${
                 playerFolded ? 'opacity-30' :
                 isCurrentTurn ? 'bg-white/15 backdrop-blur-md border-2 border-yellow-400 pulse-glow scale-110' :
-                isMe ? 'border border-yellow-400/30 bg-black/40 backdrop-blur-sm' :
                 'bg-black/40 backdrop-blur-sm border border-white/10'
               }`}
             >
               <div className="flex items-center gap-0.5">
-                <span className="text-[10px] font-bold truncate max-w-[60px]">{p.name}</span>
-                {isMe && <span className="text-[8px] text-yellow-400">(you)</span>}
+                <span className="text-[9px] font-bold truncate max-w-[50px]">{p.name}</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs font-bold tabular-nums">${formatChips(p.stack)}</span>
-                {playerAllIn && <span className="text-[9px] text-yellow-400 font-bold">AI</span>}
+                <span className="text-[10px] font-bold tabular-nums">${formatChips(p.stack)}</span>
+                {playerAllIn && <span className="text-[8px] text-yellow-400 font-bold">AI</span>}
               </div>
               {isCurrentTurn && !playerFolded && (
-                <span className="text-[9px] text-yellow-400 font-semibold">TURN</span>
+                <span className="text-[8px] text-yellow-400 font-semibold">TURN</span>
               )}
             </div>
           )
@@ -272,26 +267,26 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
           if (bet <= 0) return null
           const pos = positions[idx] || 'bottom'
           const chipPos: Record<string, string> = {
-            bottom: 'bottom-[22%] left-1/2 -translate-x-1/2',
-            'bottom-left': 'bottom-[28%] left-[18%]',
-            left: 'top-1/2 left-[22%] -translate-y-1/2',
-            'top-left': 'top-[28%] left-[18%]',
-            top: 'top-[22%] left-1/2 -translate-x-1/2',
-            'top-right': 'top-[28%] right-[18%]',
-            right: 'top-1/2 right-[22%] -translate-y-1/2',
-            'bottom-right': 'bottom-[28%] right-[18%]',
+            bottom: 'bottom-[18%] left-1/2 -translate-x-1/2',
+            'bottom-left': 'bottom-[30%] left-[16%]',
+            left: 'top-1/2 left-[18%] -translate-y-1/2',
+            'top-left': 'top-[30%] left-[16%]',
+            top: 'top-[18%] left-1/2 -translate-x-1/2',
+            'top-right': 'top-[30%] right-[16%]',
+            right: 'top-1/2 right-[18%] -translate-y-1/2',
+            'bottom-right': 'bottom-[30%] right-[16%]',
           }
           return (
             <div
               key={`bet-${p.id}`}
-              className={`absolute ${chipPos[pos]} z-15 flex flex-col items-center gap-0.5 pointer-events-none`}
+              className={`absolute ${chipPos[pos]} z-15 flex flex-col items-center gap-[1px] pointer-events-none`}
             >
               <div className="flex items-center justify-center -space-x-1">
-                <div className="chip-red w-2.5 h-2.5 rounded-full border border-white/30 shadow-sm" />
-                <div className="chip-blue w-2.5 h-2.5 rounded-full border border-white/30 shadow-sm" />
-                <div className="chip-green w-2.5 h-2.5 rounded-full border border-white/30 shadow-sm" />
+                <div className="chip-red w-2 h-2 rounded-full border border-white/20" />
+                <div className="chip-blue w-2 h-2 rounded-full border border-white/20" />
+                <div className="chip-green w-2 h-2 rounded-full border border-white/20" />
               </div>
-              <span className="chip-gold text-[8px] font-bold px-1 py-[1px] rounded-full text-black shadow-sm">
+              <span className="chip-gold text-[7px] font-bold px-1 py-[1px] rounded-full text-black shadow-sm">
                 ${formatChips(bet)}
               </span>
             </div>
@@ -299,44 +294,57 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
         })}
       </div>
 
-      {/* Player info + action trigger */}
-      <div className="mt-auto pt-3 px-2">
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-xs text-white/50 mb-1">{me.name}</div>
-          <div className="text-2xl font-bold">${formatChips(me.stack)}</div>
-          {gameState.currentBet > 0 && (
-            <div className="text-xs text-yellow-400 mt-1">
-              To call: ${formatChips(gameState.currentBet)}
+      {/* Player bar — always visible below table */}
+      <div className="px-3 pt-1.5 pb-2 flex-shrink-0">
+        <div className="flex items-center justify-between glass rounded-2xl px-3 py-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="chip-gold w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0">
+              ♠
             </div>
-          )}
-          {isFolded && <div className="text-xs text-red-400 mt-1">You folded</div>}
-          {isAllIn && <div className="text-xs text-yellow-400 mt-1 font-bold">ALL-IN!</div>}
+            <div className="min-w-0">
+              <div className="text-xs font-bold truncate">{me.name}</div>
+              <div className="text-base font-bold tabular-nums">${formatChips(me.stack)}</div>
+            </div>
+          </div>
 
-          {/* Hand strength */}
-          {holeCards.length === 2 && handSummary && (
-            <div className="mt-2 pt-2 border-t border-white/10">
-              <div className="flex items-center justify-center gap-1 text-xs text-white/50 mb-0.5">
-                {holeCards.map((c, i) => {
-                  const isRed = c[1] === 'h' || c[1] === 'd'
-                  return <span key={i} className={`font-bold ${isRed ? 'text-red-400' : 'text-white'}`}>{c[0]}{['♠', '♥', '♦', '♣'][['s', 'h', 'd', 'c'].indexOf(c[1])]}</span>
-                })}
+          <div className="flex items-center gap-2">
+            {gameState.currentBet > 0 && (
+              <div className="text-right">
+                <div className="text-[9px] text-white/40">To call</div>
+                <div className="text-xs font-bold text-yellow-400">${formatChips(callAmount)}</div>
               </div>
-              <div className="text-sm font-bold">{handSummary.name}</div>
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <div className="w-full max-w-[120px] h-1.5 bg-white/10 rounded-full overflow-hidden">
+            )}
+            {isFolded && <span className="text-xs text-red-400 font-bold">FOLDED</span>}
+            {isAllIn && <span className="text-xs text-yellow-400 font-bold">ALL-IN</span>}
+          </div>
+        </div>
+
+        {/* Hand strength + cards */}
+        <div className="flex items-center justify-between mt-1.5">
+          <div className="flex items-center gap-2">
+            {!isFolded && (
+              <button
+                onClick={() => setShowCardSelector(true)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg glass"
+              >
+                <span className="text-[10px] text-white/50">
+                  {holeCards.length === 2 ? holeCards.map(c => {
+                    const isRed = c[1] === 'h' || c[1] === 'd'
+                    return <span key={c} className={`font-bold ${isRed ? 'text-red-400' : 'text-white'}`}>{c[0]}{['♠', '♥', '♦', '♣'][['s', 'h', 'd', 'c'].indexOf(c[1])]} </span>
+                  }) : '🂠 Cards'}
+                </span>
+              </button>
+            )}
+            {holeCards.length === 2 && handSummary && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-white/80">{handSummary.name}</span>
+                <div className="w-14 h-1.5 bg-white/10 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all" style={{ width: `${handSummary.pct}%` }} />
                 </div>
-                <span className="text-xs font-bold text-yellow-400">{handSummary.pct}%</span>
+                <span className="text-[9px] font-bold text-yellow-400">{handSummary.pct}%</span>
               </div>
-            </div>
-          )}
-
-          <button
-            onClick={() => setShowCardSelector(true)}
-            className="mt-2 text-[10px] text-white/30 hover:text-white/60 transition-colors"
-          >
-            {holeCards.length === 2 ? 'Change Cards' : '+ Show My Cards'}
-          </button>
+            )}
+          </div>
         </div>
 
         <CardSelector
@@ -351,26 +359,31 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
         {/* Action buttons */}
         {showActions && !isFolded && !isAllIn && (
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="mt-3 space-y-2"
+            className="mt-2 space-y-1.5"
           >
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
+              <motion.div whileTap={{ scale: 0.95 }}>
+                <Button variant="destructive" size="sm" fullWidth onClick={() => handleAction('fold')}>
+                  ✗ Fold
+                </Button>
+              </motion.div>
               {canCheckAction ? (
                 <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button variant="secondary" fullWidth onClick={() => handleAction('check')}>
+                  <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('check')}>
                     ✓ Check
                   </Button>
                 </motion.div>
               ) : callAmount >= me.stack ? (
                 <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button variant="secondary" fullWidth onClick={() => handleAction('all-in', maxBet)}>
-                    All-in ${formatChips(maxBet)}
+                  <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('all-in', maxBet)}>
+                    All-in
                   </Button>
                 </motion.div>
               ) : (
                 <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button variant="secondary" fullWidth onClick={() => handleAction('call', callAmount)}>
+                  <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('call', callAmount)}>
                     Call ${formatChips(callAmount)}
                   </Button>
                 </motion.div>
@@ -378,6 +391,7 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
               <motion.div whileTap={{ scale: 0.95 }}>
                 <Button
                   variant="primary"
+                  size="sm"
                   fullWidth
                   onClick={() => { setBetAmount(String(bbAmount)); setShowBetInput(true); }}
                 >
@@ -385,23 +399,16 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
                 </Button>
               </motion.div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <motion.div whileTap={{ scale: 0.95 }}>
-                <Button variant="destructive" fullWidth onClick={() => handleAction('fold')}>
-                  ✗ Fold
-                </Button>
-              </motion.div>
-              <motion.div whileTap={{ scale: 0.95 }}>
-                <Button variant="ghost" fullWidth onClick={() => handleAction('all-in', maxBet)}>
-                  All-in ${formatChips(maxBet)}
-                </Button>
-              </motion.div>
-            </div>
+            <motion.div whileTap={{ scale: 0.95 }}>
+              <Button variant="ghost" size="sm" fullWidth onClick={() => handleAction('all-in', maxBet)}>
+                All-in ${formatChips(maxBet)}
+              </Button>
+            </motion.div>
           </motion.div>
         )}
 
         {gameState.phase !== 'idle' && !isFolded && !isAllIn && !showActions && (
-          <div className="text-center text-xs text-white/30 mt-3">Waiting for other players...</div>
+          <div className="text-center text-[10px] text-white/30 mt-2">Waiting for other players...</div>
         )}
       </div>
     </div>
