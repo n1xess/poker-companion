@@ -1,0 +1,7 @@
+uid=2_0 RootWebArea "Poker Companion" url="https://poker-companion-eta.vercel.app/table/B0950R"
+  uid=9_0 button
+  uid=9_1 StaticText "0"
+  uid=9_2 StaticText " online"
+  uid=9_3 button
+  uid=9_4 StaticText "Dealer"
+  uid=9_5 button "♠ New Hand ♥"

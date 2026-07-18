@@ -77,13 +77,12 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
   }
 
   const me = gameState.players.find(p => p.id === gameState.yourId)
-  if (!me) return null
 
   const isFolded = gameState.playerFolded.includes(gameState.yourId)
   const isAllIn = gameState.playerAllIn.includes(gameState.yourId)
   const callAmount = calculateCallAmount(gameState.currentBet, gameState.playerBets[gameState.yourId] || 0)
   const canCheckAction = gameState.currentBet <= (gameState.playerBets[gameState.yourId] || 0)
-  const maxBet = me.stack
+  const maxBet = me?.stack || 0
   const bbAmount = gameState.bbAmount || 20
 
   const handleAction = (type: string, amount: number = 0) => {
@@ -180,7 +179,7 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
       )}
 
       {/* Poker Table */}
-      <div className="relative w-full mx-auto flex-shrink-0" style={{ paddingBottom: '75%', maxHeight: '60vh' }}>
+      <div className="relative w-full mx-auto flex-shrink-0" style={{ minHeight: '240px', maxHeight: '50vh', height: '60vw' }}>
         <div className="absolute inset-0 rounded-[40px] poker-table-felt overflow-hidden">
           <div className="absolute inset-[8px] rounded-[32px] border border-white/5" />
         </div>
@@ -220,12 +219,12 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
           <div className="text-[8px] text-white/40 uppercase tracking-widest">Pot</div>
         </div>
 
-        {/* Player seats - use original player index for correct positions */}
+        {/* All player seats */}
         {gameState.players.map((p, idx) => {
-          if (p.id === gameState.yourId) return null
           const isCurrentTurn = gameState.currentTurnPlayerId === p.id
           const playerFolded = gameState.playerFolded.includes(p.id)
           const playerAllIn = gameState.playerAllIn.includes(p.id)
+          const isMe = p.id === gameState.yourId
 
           const pos = positions[idx] || 'bottom'
           const posClass = pos === 'bottom' ? 'absolute bottom-1 left-1/2 -translate-x-1/2' :
@@ -244,11 +243,13 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
               className={`${posClass} flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl min-w-[70px] z-20 transition-all duration-300 ${
                 playerFolded ? 'opacity-30' :
                 isCurrentTurn ? 'bg-white/15 backdrop-blur-md border-2 border-yellow-400 pulse-glow scale-110' :
+                isMe ? 'border border-yellow-400/30 bg-black/40 backdrop-blur-sm' :
                 'bg-black/40 backdrop-blur-sm border border-white/10'
               }`}
             >
               <div className="flex items-center gap-0.5">
                 <span className="text-[10px] font-bold truncate max-w-[55px]">{p.name}</span>
+                {isMe && <span className="text-[8px] text-yellow-400">(you)</span>}
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-bold tabular-nums">${formatChips(p.stack)}</span>
@@ -294,27 +295,8 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
         })}
       </div>
 
-      {/* Bottom section */}
+      {/* Bottom section — cards + actions */}
       <div className="flex-shrink-0 pt-2 space-y-2">
-        {/* Player bar */}
-        <div className="flex items-center justify-between glass rounded-2xl px-3 py-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="chip-gold w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-black flex-shrink-0">♠</div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold truncate">{me.name}</div>
-              <div className="text-sm font-bold tabular-nums">${formatChips(me.stack)}</div>
-            </div>
-          </div>
-          {gameState.currentBet > 0 && !isFolded && !isAllIn && (
-            <div className="text-right flex-shrink-0">
-              <div className="text-[9px] text-white/40">Call</div>
-              <div className="text-xs font-bold text-yellow-400">${formatChips(callAmount)}</div>
-            </div>
-          )}
-          {isFolded && <span className="text-[11px] text-red-400 font-bold">FOLDED</span>}
-          {isAllIn && <span className="text-[11px] text-yellow-400 font-bold">ALL-IN</span>}
-        </div>
-
         {/* Cards row */}
         {!isFolded && !isAllIn && (
           <div className="flex items-center gap-2">
@@ -357,7 +339,7 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
             <div className="grid grid-cols-3 gap-1.5">
               {canCheckAction ? (
                 <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('check')}>✓ Check</Button>
-              ) : callAmount >= me.stack ? (
+              ) : callAmount >= (me?.stack || 0) ? (
                 <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('all-in', maxBet)}>All-in</Button>
               ) : (
                 <Button variant="secondary" size="sm" fullWidth onClick={() => handleAction('call', callAmount)}>Call ${formatChips(callAmount)}</Button>
