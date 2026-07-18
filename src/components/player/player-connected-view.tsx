@@ -163,7 +163,7 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
   const positions = ['bottom', 'bottom-left', 'left', 'top-left', 'top', 'top-right', 'right', 'bottom-right']
 
   return (
-    <div className="flex-1 flex flex-col px-2 pb-2"
+    <div className="flex-1 flex flex-col min-h-0 px-2 pb-2"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       {/* Winner banner */}
@@ -180,7 +180,7 @@ export function PlayerConnectedView({ gameState, onAction, playerName }: PlayerC
       )}
 
       {/* Poker Table */}
-      <div className="relative w-full aspect-[5/4] max-h-[50vh] mx-auto flex-shrink-0">
+      <div className="relative w-full mx-auto flex-shrink-0" style={{ paddingBottom: '75%', maxHeight: '60vh' }}>
         <div className="absolute inset-0 rounded-[40px] poker-table-felt overflow-hidden">
           <div className="absolute inset-[8px] rounded-[32px] border border-white/5" />
         </div>
