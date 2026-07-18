@@ -53,6 +53,7 @@ export function TableScreen() {
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null)
   const [connected, setConnected] = useState(false)
   const [connectedPlayerNames, setConnectedPlayerNames] = useState<string[]>([])
+  const [broadcastTick, setBroadcastTick] = useState(0)
   const [showGiveChips, setShowGiveChips] = useState(false)
   const [giveChipsAmount, setGiveChipsAmount] = useState('')
   const [showCommunityCards, setShowCommunityCards] = useState(false)
@@ -86,11 +87,13 @@ export function TableScreen() {
         if (prev.includes(msg.playerName)) return prev
         return [...prev, msg.playerName]
       })
+      setBroadcastTick(t => t + 1)
       showToast(`${msg.playerName} connected`, 'success')
     })
 
     const unsubPlayerLeft = wsService.on('player_left', (msg) => {
       setConnectedPlayerNames((prev) => prev.filter(n => n !== msg.playerName))
+      setBroadcastTick(t => t + 1)
       showToast(`${msg.playerName} disconnected`, 'info')
     })
 
@@ -142,7 +145,7 @@ export function TableScreen() {
       prevStateRef.current = stateJson
       wsService.send({ type: 'state_update', state: stateForPlayers })
     }
-  }, [connected, phase, pot, currentBet, currentTurnIndex, playerBets, playerFolded, playerAllIn, communityCards, players, communityCardsStr])
+  }, [connected, phase, pot, currentBet, currentTurnIndex, playerBets, playerFolded, playerAllIn, communityCards, players, communityCardsStr, broadcastTick])
 
   const handlePlayerTap = (playerId: string) => {
     setSelectedPlayerId(playerId)
